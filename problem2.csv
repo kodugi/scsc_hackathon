@@ -1,0 +1,51 @@
+PROBLEM_ID,TITLE_NM,TAGS_NM,SOLVED_LVL,HASH_ID
+1000,A+B,impl arithmetic math,1,1000
+1001,A-B,impl arithmetic math,1,1001
+1008,A/B,impl arithmetic math,1,1008
+1011,Fly me to the Alpha Centauri,math,11,1011
+1018,체스판 다시 칠하기,impl bruteforce,7,1018
+1019,책 페이지,math impl,16,1019
+1021,회전하는 큐,ds deque,8,1021
+1026,보물,math greedy sorting,7,1026
+1094,막대기,math bitmask,6,1094
+1106,호텔,dp knapsack,12,1106
+1149,RGB거리,dp,10,1149
+1181,단어 정렬,string sorting,6,1181
+1197,최소 스패닝 트리,mst graph,12,1197
+1238,파티,graph shortest path dijkstra's,13,1238
+1256,사전,math dp combinatorics traceback,14,1256
+1260,DFS와 BFS,graph traversal bfs dfs,9,1260
+1305,광고,string kmp,17,1305
+1339,단어 수학,greedy,12,1339
+1417,국회의원 선거,impl ds greedy simulation priority queue,6,1417
+1427,소트인사이드,string sorting,6,1427
+1436,영화감독 숌,bruteforce,6,1436
+1450,냅색문제,binary search meet in the middle,15,1450
+1463,1로 만들기,dp,8,1463
+1504,특정한 최단 경로,graph shortest path dijkstra's,12,1504
+1520,내리막 길,dp graph traversal dfs,13,1520
+1629,곱셈,math exponentiation by squaring,10,1629
+1644,소수의 연속합,math number theory two-pointer primality test eratosthenes,13,1644
+1654,랜선 자르기,binary search parametric search,9,1654
+1708,볼록 껍질,geom convex hull angle sorting,16,1708
+1715,카드 정렬하기,ds greedy priority queue,12,1715
+1717,집합의 표현,ds dsu,11,1717
+1753,최단경로,graph shortest path dijkstra's,12,1753
+1761,정점들의 거리,ds tree lca sparse table,16,1761
+1786,찾기,string kmp,16,1786
+1806,부분합,prefix sum two-pointer,12,1806
+1822,차집합,ds sorting set hashset treeset,7,1822
+1837,암호제작,math bruteforce arbitrary precision / big integers,3,1837
+1912,연속합,dp maximum subarray,9,1912
+1920,수 찾기,ds sorting binary search set hashset,7,1920
+1927,최소 힙,ds priority queue,9,1927
+1931,회의실 배정,greedy sorting,11,1931
+1956,운동,graph shortest path floyd–warshall,12,1956
+1966,프린터 큐,impl ds simulation queue,8,1966
+1967,트리의 지름,graph traversal tree dfs tree diameter,12,1967
+1991,트리 순회,tree recursion,10,1991
+2002,추월,impl ds string set hashset,10,2002
+2042,구간 합 구하기,segtree ds,15,2042
+2150,Strongly Connected Component,graph scc,16,2150
+2153,소수 단어,math string number theory primality test,4,2153
+2156,포도주 시식,dp,10,2156
