@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .tabBar {
+            display: flex;
+            margin: 10px;
+        }
+
+        .tab {
+            margin: 10px;
+        }
+
+        .problem {
+            display: flex;
+            align-items: center;
+        }
+
+        .main {
+            display: flex;
+            margin: 10px;
+            gap: 10px;
+        }
+
+        .navigator {
+            width: 10%;
+        }
+
+        #profile {
+            width: 100%;
+            border-radius: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tabBar">
+        <div class="tab">홈</div>
+        <div class="tab">문제 검색</div>
+    </div>
+    <div class="main">
+        <div class="navigator">
+            <img src="glitch.png" alt="" id="profile">
+            <p id="handle">kodugi05</p>
+        </div>
+        <div class="problems">추천 문제
+            <div class="problem">
+                <p>1000: </p>
+                <a href="https://www.acmicpc.net/problem/1000">A+B</a>
+            </div>
+            <div class="problem">
+                <p>1001: </p>
+                <a href="https://www.acmicpc.net/problem/1001">A-B</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
