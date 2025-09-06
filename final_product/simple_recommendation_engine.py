@@ -295,6 +295,154 @@ class SimpleCollaborativeRecommender:
             'level_distribution': dict(Counter(levels))
         }
     
+    def get_recommendations_for_new_user_by_tag(self, new_user_df, tag_name, n_recommendations=10):
+        """
+        새로운 사용자에게 특정 태그 문제만 추천
+        """
+        if not self.trained:
+            raise ValueError("❌ 먼저 모델을 학습해주세요!")
+        
+        if new_user_df is None or len(new_user_df) == 0:
+            print("❌ 사용자 데이터가 비어있습니다.")
+            return []
+        
+        # 새 사용자 정보 추출
+        user_handle = new_user_df['SOLVER_HANDLE'].iloc[0]
+        print(f"🎯 새 사용자 '{user_handle}'에게 '{tag_name}' 태그 문제 추천 중...")
+        
+        # 새 사용자의 문제-난이도 매핑 생성
+        new_user_problems = {}
+        for _, row in new_user_df.iterrows():
+            problem_id = row['PROBLEM_ID']
+            level = row['SOLVED_LVL']
+            new_user_problems[problem_id] = level
+        
+        solved_problems = set(new_user_problems.keys())
+        print(f"   - 새 사용자가 푼 문제 수: {len(solved_problems)}")
+        
+        # 기존 사용자들과의 유사도 계산
+        user_similarities = {}
+
+        for existing_user, existing_problems in self.user_item_matrix.items():
+            similarity = self._cosine_similarity(new_user_problems, existing_problems)
+            if similarity > 0:  # 유사도가 0보다 큰 경우만
+                user_similarities[existing_user] = similarity
+        
+        if not user_similarities:
+            print("   - 유사한 사용자를 찾을 수 없습니다.")
+            return self._get_popular_recommendations_by_tag(solved_problems, tag_name, n_recommendations)
+        
+        # 유사도 기준으로 상위 사용자들 선택
+        similar_users = sorted(
+            user_similarities.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:10]  # 상위 10명의 유사한 사용자
+        
+        print(f"   - 유사한 사용자 {len(similar_users)}명 발견")
+        
+        # 추천 점수 계산 (태그별 필터링 포함)
+        recommendations = defaultdict(float)
+        
+        for similar_user, similarity_score in similar_users:
+            for problem, rating in self.user_item_matrix[similar_user].items():
+                if problem not in solved_problems:  # 아직 안 푼 문제만
+                    # 간단한 태그 필터링 (문제 번호 범위 기반)
+                    if self._is_tag_problem(problem, tag_name):
+                        recommendations[problem] += similarity_score * rating
+
+        if not recommendations:
+            print(f"   - '{tag_name}' 태그 문제를 찾을 수 없습니다.")
+            return self._get_popular_recommendations_by_tag(solved_problems, tag_name, n_recommendations)
+        
+        # 추천 점수 기준으로 정렬
+        sorted_recommendations = sorted(
+            recommendations.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+        
+        # 결과 포맷팅
+        result = []
+        for problem_id, score in sorted_recommendations[:n_recommendations]:
+            result.append({
+                'problem_id': int(problem_id),
+                'estimated_rating': float(score),
+                'actual_rating': None
+            })
+        
+        print(f"✅ '{tag_name}' 태그 추천 완료! {len(result)}개 문제:")
+        for i, rec in enumerate(result[:5], 1):
+            print(f"   {i}. 문제 {rec['problem_id']}: 점수 {rec['estimated_rating']:.2f}")
+        
+        return result
+            
+
+    def _is_tag_problem(self, problem_id, tag_name):
+        """
+        문제 번호 기반으로 태그 추정 (간단한 버전)
+        """
+        tag_ranges = {
+            'implementation': (1000, 2000),      # 구현
+            'math': (1001, 3000),                # 수학  
+            'greedy': (1200, 2500),              # 그리디
+            'dp': (1000, 3000),                  # DP
+            'graph': (1260, 2000),               # 그래프
+            'string': (1152, 2000),              # 문자열
+            'bruteforce': (1000, 2000),          # 브루트포스
+        }
+        
+        # 태그 이름 정규화
+        tag_key = tag_name.lower().replace('_', '').replace(' ', '')
+        
+        # 일부 태그 별칭 처리
+        if 'dynamic' in tag_key or 'programming' in tag_key:
+            tag_key = 'dp'
+        if 'brute' in tag_key:
+            tag_key = 'bruteforce'
+        
+        if tag_key in tag_ranges:
+            min_range, max_range = tag_ranges[tag_key]
+            return min_range <= problem_id <= max_range
+        
+        # 알 수 없는 태그면 모든 문제 허용
+        return True
+    
+    def _get_popular_recommendations_by_tag(self, solved_problems, tag_name, n_recommendations):
+        """
+        태그별 인기 문제 추천
+        """
+        print(f"   - '{tag_name}' 태그 인기 문제를 추천합니다...")
+        
+        # 전체 사용자들이 많이 푼 문제들 중에서 태그별 필터링
+        problem_counts = defaultdict(int)
+        problem_avg_levels = defaultdict(list)
+        
+        for user_problems in self.user_item_matrix.values():
+            for problem, level in user_problems.items():
+                if problem not in solved_problems and self._is_tag_problem(problem, tag_name):
+                    problem_counts[problem] += 1
+                    problem_avg_levels[problem].append(level)
+        
+        # 인기도와 평균 난이도를 고려한 점수 계산
+        popular_problems = []
+        for problem, count in problem_counts.items():
+            if count >= 1:  # 최소 1명 이상이 푼 문제
+                avg_level = sum(problem_avg_levels[problem]) / len(problem_avg_levels[problem])
+                popularity_score = count * avg_level  # 인기도 * 평균 난이도
+                popular_problems.append({
+                    'problem_id': int(problem),
+                    'estimated_rating': float(popularity_score),
+                    'actual_rating': None
+                })
+        
+        # 인기도 기준으로 정렬
+        popular_problems.sort(key=lambda x: x['estimated_rating'], reverse=True)
+        
+        return popular_problems[:n_recommendations]
+
+
+    
     def save_model(self, model_path="simple_recommendation_model.pkl"):
         """학습된 모델 저장"""
         if not self.trained:
@@ -364,7 +512,7 @@ def demo_simple_recommendation_system():
             
             for i, rec in enumerate(recommendations, 1):
                 print(f"{i}. 문제 {rec['problem_id']}: "
-                      f"추천 점수 {rec['estimated_rating']:.2f}")
+                    f"추천 점수 {rec['estimated_rating']:.2f}")
     
     # 5. 모델 저장
     recommender.save_model()
