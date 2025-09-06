@@ -190,7 +190,7 @@ def createUserDataFrame(user_handle):
     return df[['SOLVER_HANDLE', 'PROBLEM_ID', 'SOLVED_LVL']]
 
 
-@app.route('/getTagList', methods = ['POST'])
+@app.route('/getTagList', methods = ['GET'])
 def getTagList():
     tagList = []
     page = 1
@@ -202,7 +202,7 @@ def getTagList():
         temp = response.json().get("items", [])
         if(len(temp) == 0):
             break
-        tagList += ([tag.get("displayNames")[1].get("short").replace(' ', '_') for tag in temp])
+        tagList += ([{"en": tag.get("displayNames")[1].get("short").replace(' ', '_'), "ko": tag.get("displayNames")[0].get("short").replace(' ', '_')} for tag in temp])
         page += 1
     return jsonify({"items": tagList})
 
@@ -294,6 +294,13 @@ def search():
 
 # 🎯 핵심 수정: getRecommendation 함수를 실제 추천 시스템과 연결
 @app.route('/getRecommendation', methods=['GET'])
+def parseRecommendation():
+    problemList = getRecommendation()
+    parsed = []
+    for p in problemList:
+        parsed.append(findProblem(p))
+    return jsonify({"items": parsed})
+
 def getRecommendation():
     """현재 로그인한 사용자에게 맞춤 문제 추천"""
     
@@ -334,6 +341,61 @@ def getRecommendation():
     except Exception as e:
         print(f"❌ 추천 생성 중 오류: {e}")
         return [1000, 1001, 1002, 1003]  # 기본 추천
+
+@app.route('/getRecommendationByTag', methods=['POST'])
+def parseRecommendationByTag():
+    tag_name = request.get_json().get('tag')
+    print("tag_name:",tag_name)
+    problemList = getRecommendationByTag(tag_name)
+    parsed = []
+    for p in problemList:
+        parsed.append(findProblem(p))
+    return jsonify({"items": parsed})
+
+def getRecommendationByTag(tag_name):
+    """태그별 맞춤 문제 추천 (간단 버전)"""
+
+    print(f"🏷️ 태그 '{tag_name}' 추천 요청")
+
+    # 로그인 확인
+    if not loggedIn or not user:
+        print("❌ 로그인되지 않은 사용자")
+        return [1000, 1001, 1002, 1003]
+
+    # 추천 시스템 확인
+    if recommender is None or not recommender.trained:
+        print("❌ 추천 시스템이 초기화되지 않음")
+        return [1000, 1001, 1002, 1003]
+
+    try:
+        user_id = user.id
+        print(f"🎯 사용자 '{user_id}'에게 '{tag_name}' 태그 문제 추천 중...")
+        
+        # 실시간으로 사용자 데이터 가져오기
+        user_df = createUserDataFrame(user_id)
+        
+        if user_df is None or len(user_df) == 0:
+            print(f"⚠️ 사용자 '{user_id}'의 풀이 기록을 찾을 수 없음")
+            return [1000, 1001, 1002, 1003]
+        
+        # 태그별 추천 생성
+        recommendations = recommender.get_recommendations_for_new_user_by_tag(
+            user_df, tag_name, n_recommendations=10
+        )
+        
+        if not recommendations:
+            print(f"⚠️ '{tag_name}' 태그 추천이 없음")
+            return [1000, 1001, 1002, 1003]
+            
+        # 문제 ID만 추출
+        problem_ids = [rec['problem_id'] for rec in recommendations]
+        print(f"✅ '{tag_name}' 태그 추천 완료: {problem_ids}")
+        
+        return problem_ids
+        
+    except Exception as e:
+        print(f"❌ 태그별 추천 생성 중 오류: {e}")
+        return [1000, 1001, 1002, 1003]
     
 
 @app.route('/api/recommendations', methods=['GET'])
@@ -415,6 +477,22 @@ def api_status():
         'current_user': user.id if user else None,
         'message': '시스템이 정상 작동 중입니다.' if recommender else '추천 시스템이 초기화되지 않았습니다.'
     })
+
+import pvp
+pvpManager = pvp.PvpManager()
+
+@app.route("/pvp/", methods = ['GET'])
+def pvp():
+    return render_template("pvp.html")
+
+@app.route('/pvp/start', methods = ['POST'])
+def pvpStart():
+    data = request.get_json()
+    pvpManager.newPvp(user, data.get("problemId"))
+
+@app.route('/pvp/get', methods = ['POST'])
+def pvpGet():
+    return jsonify({"items": pvpManager.findPvp(user)})
 
 if __name__ == '__main__':
     print("Flask 앱 시작...")

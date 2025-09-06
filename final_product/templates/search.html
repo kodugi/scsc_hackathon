@@ -6,13 +6,15 @@
     <title>Document</title>
 </head>
 <body>
-    <form action="post">
+    <div>
         <h1>검색 조건 설정</h1>
         <h2>태그</h2>
         <select name="tag" id="tag">
             
         </select>
-    </form>
+        <button id="submit">검색</button>
+    </div>
+    <div id="problems"></div>
     <script src="{{ url_for('static', filename='search.js') }}"></script>
 </body>
 </html>

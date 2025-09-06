@@ -3,6 +3,8 @@ import pickle
 import os
 from collections import defaultdict, Counter
 import math
+import requests
+import json
 
 class SimpleCollaborativeRecommender:
     def __init__(self, csv_file_path=None):
@@ -377,36 +379,24 @@ class SimpleCollaborativeRecommender:
         
         return result
             
-
+    def makeRequest(url, querystring):
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.request("GET", url, headers=headers, params=querystring)
+            response.raise_for_status()
+            return response
+        except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
+            print(f"API Error: {e}")
+            return None
+    
     def _is_tag_problem(self, problem_id, tag_name):
-        """
-        문제 번호 기반으로 태그 추정 (간단한 버전)
-        """
-        tag_ranges = {
-            'implementation': (1000, 2000),      # 구현
-            'math': (1001, 3000),                # 수학  
-            'greedy': (1200, 2500),              # 그리디
-            'dp': (1000, 3000),                  # DP
-            'graph': (1260, 2000),               # 그래프
-            'string': (1152, 2000),              # 문자열
-            'bruteforce': (1000, 2000),          # 브루트포스
-        }
-        
-        # 태그 이름 정규화
-        tag_key = tag_name.lower().replace('_', '').replace(' ', '')
-        
-        # 일부 태그 별칭 처리
-        if 'dynamic' in tag_key or 'programming' in tag_key:
-            tag_key = 'dp'
-        if 'brute' in tag_key:
-            tag_key = 'bruteforce'
-        
-        if tag_key in tag_ranges:
-            min_range, max_range = tag_ranges[tag_key]
-            return min_range <= problem_id <= max_range
-        
-        # 알 수 없는 태그면 모든 문제 허용
-        return True
+        response = self.makeRequest("https://solved.ac/api/v3/problem/show", {"problemId": problem_id})
+        if(response is None):
+            return False
+        else:
+            temp = response.json().get("items", None)
+            tags = temp[0].get("tags")
+            return (tag_name in [tag.get("displayNames")[1].get("short").replace(' ', '_') for tag in tags])
     
     def _get_popular_recommendations_by_tag(self, solved_problems, tag_name, n_recommendations):
         """
