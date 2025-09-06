@@ -379,7 +379,7 @@ class SimpleCollaborativeRecommender:
         
         return result
             
-    def makeRequest(url, querystring):
+    def makeRequest(self, url, querystring):
         headers = {"Content-Type": "application/json"}
         try:
             response = requests.request("GET", url, headers=headers, params=querystring)
@@ -391,12 +391,28 @@ class SimpleCollaborativeRecommender:
     
     def _is_tag_problem(self, problem_id, tag_name):
         response = self.makeRequest("https://solved.ac/api/v3/problem/show", {"problemId": problem_id})
-        if(response is None):
+        if response is None:
             return False
-        else:
-            temp = response.json().get("items", None)
-            tags = temp[0].get("tags")
-            return (tag_name in [tag.get("displayNames")[1].get("short").replace(' ', '_') for tag in tags])
+        
+        # JSON 객체를 직접 사용하고, tags가 없는 경우를 대비해 기본값으로 빈 리스트([])를 사용
+        problem_info = response.json()
+        tags = problem_info.get("tags", [])
+
+        # 태그가 없는 문제일 경우
+        if not tags:
+            return False
+
+        # 리스트 컴프리헨션을 더 안전하게 변경
+        try:
+            tag_list = [
+                tag.get("displayNames")[1].get("short").replace(' ', '_')
+                for tag in tags
+                if tag and isinstance(tag.get("displayNames"), list) and len(tag.get("displayNames")) > 1
+            ]
+            return tag_name in tag_list
+        except (TypeError, IndexError, AttributeError):
+            # 예기치 않은 태그 구조에 대한 예외 처리
+            return False
     
     def _get_popular_recommendations_by_tag(self, solved_problems, tag_name, n_recommendations):
         """
