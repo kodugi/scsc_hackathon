@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        #tag {
+            width: 15%;
+            height: 40px;
+        }
+    </style>
 </head>
 <body>
     <form action="post">
         <h1>검색 조건 설정</h1>
         <h2>태그</h2>
         <select name="tag" id="tag">
-            
+
         </select>
     </form>
     <script src="{{ url_for('static', filename='search.js') }}"></script>

@@ -13,14 +13,26 @@
 
         .tab {
             margin: 10px;
+            
+        }
+
+        #problems {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 500px;
         }
 
         .problem {
-            display: flex;
             align-items: center;
+            background-color: antiquewhite;
+            border-color: black;
+            border-width: 10px;
+            width: 100%;
+            height: 100px;
         }
 
-        .main {
+        .body {
             display: flex;
             margin: 10px;
             gap: 10px;
@@ -29,7 +41,7 @@
 
         .navigator {
             width: 20%;
-            height: auto;
+            height: 400px;
             background-color: antiquewhite;
             justify-content: flex-start;
             padding: 10px;
@@ -55,7 +67,7 @@
         <div class="tab" id="home" onclick="location.href='/'">홈</div>
         <div class="tab" id="search_question" onclick="location.href='/search'">문제 검색</div>
     </div>
-    <div class="main">
+    <div class="body">
         <div class="navigator" id="profile_nav">
             <p id="handle"></p>
             <button id="logoutBtn" onclick="location.href='/logout'">로그아웃</button>
@@ -65,16 +77,12 @@
             <button id="loginBtn" onclick="location.href='/login'">로그인</button>
             <button id="registerBtn" onclick="location.href='/register'">회원가입</button>
         </div>
-        <div class="problems">추천 문제
-            <div class="problem">
-                <p>1000: </p>
-                <a href="https://www.acmicpc.net/problem/1000">A+B</a>
-            </div>
-            <div class="problem">
-                <p>1001: </p>
-                <a href="https://www.acmicpc.net/problem/1001">A-B</a>
-            </div>
+        <div class="main">
+            <h1>추천 문제</h1>
+            <div id="problems">
         </div>
+        </div>
+        
     </div>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>

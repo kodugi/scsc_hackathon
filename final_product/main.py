@@ -51,7 +51,7 @@ def findProblem(problemId):
     else:
         return response.json() # JSON 객체를 바로 반환
 
-@app.route('/getTagList', methods = ['POST'])
+@app.route('/getTagList', methods = ['GET'])
 def getTagList():
     tagList = []
     page = 1
@@ -63,7 +63,7 @@ def getTagList():
         temp = response.json().get("items", [])
         if(len(temp) == 0):
             break
-        tagList += ([tag.get("displayNames")[1].get("short").replace(' ', '_') for tag in temp])
+        tagList += ([{"ko": tag.get("displayNames")[0].get("short"), "en_short": tag.get("displayNames")[1].get("short").replace(' ', '_')} for tag in temp])
         page += 1
     return jsonify({"items": tagList})
 
@@ -145,15 +145,44 @@ def search():
         return render_template('search.html')
     else:
         problems = {"items": []}
-        reccommendList = getRecommendation("query")
+        reccommendList = recommend("query")
         for p in reccommendList:
             problems["items"].append(findProblem(p))
             print(problems["items"])
 
-@app.route('/getRecommendation', methods=['GET'])
-def getRecommendation(query):
+def crawlSolved(handle):
+    url = "https://solved.ac/api/v3/search/problem"
+    headers = {"Content-Type": "application/json"}
+    page = 1
+    items = []
+    while(True):
+        querystring = {"query": f"solved_by:{handle}", "page": f"{page}"}
+        try:
+            response = requests.request("GET", url, headers=headers, params=querystring)
+            temp = dict()
+            temp["item"] = json.loads(response.text).get("items")
+            if(len(temp["item"]) == 0):
+                break
+            for item in temp["item"]:
+                items.append(item)
+            page += 1
+        except:
+            break
+    return {"items": items}
+
+@app.route('/getRecommendation', methods = ['GET'])
+def getRecommendation():
+    if(loggedIn):
+        solvedProblems = crawlSolved(user.get_id())
+        print(solvedProblems)
+    problems = {"items": []}
+    reccommendList = recommend("query")
+    for p in reccommendList:
+        problems["items"].append(findProblem(p))
+    return jsonify(problems)
+
+def recommend(query):
     return [1000, 1001, 1002, 1003]
 
 if __name__ == '__main__':
-    print(getTagList())
     app.run(debug=True)
