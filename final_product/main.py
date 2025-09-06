@@ -184,5 +184,10 @@ def getRecommendation():
 def recommend(query):
     return [1000, 1001, 1002, 1003]
 
+@app.route('/pvp', methods = ['GET', 'POST'])
+def pvp():
+    if(request.method == 'GET'):
+        return render_template("pvp.html")
+
 if __name__ == '__main__':
     app.run(debug=True)
