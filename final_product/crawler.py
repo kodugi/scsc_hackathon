@@ -12,7 +12,7 @@ handles = []
 
 SAMPLE_SIZE_PER_PAGE = 5
 MAX_PAGE = 249 #249
-MAX_USER_PAGE = 200
+MAX_USER_PAGE = 4500
 PAGE_SAMPLE_SIZE = 5
 
 def appending(problem, hash, title, level, tags, solver):
@@ -33,11 +33,11 @@ def crawlUserList(page):
 
     temp = dict()
     temp["item"] = json.loads(response.text).get("items")
-    for item in random.sample(temp["item"], k=SAMPLE_SIZE_PER_PAGE):
+    for item in random.sample(temp["item"], k=min(SAMPLE_SIZE_PER_PAGE, len(temp["item"]))):
         handles.append(item["handle"])
     
 def crawlProblem(page, problem, handle=None):
-    time.sleep(1)
+    time.sleep(0.5)
     url = "https://solved.ac/api/v3/search/problem"
     if(handle is None):
         querystring = {"query": "", "page": f"{page}"}
@@ -60,7 +60,7 @@ def crawlProblem(page, problem, handle=None):
         length = len(info)
         for idx, tag in enumerate(info):
             temp_tag = tag.get("displayNames")
-            tags += temp_tag[1].get("short")
+            tags += temp_tag[1].get("short").replace(' ', '_')
 
             if idx == length - 1:
                 continue
@@ -91,7 +91,7 @@ def main():
     for i in range(1, MAX_PAGE):
         print(f"crawling {i} page now still {249 - i} to go")
         crawlProblem(i, allProblem)
-    df = pd.DataFrame({"PROBLEM_ID" : problemForEachUser.idx, "TITLE_NM" : problemForEachUser.input_title, "TAGS_NM" : problemForEachUser.input_tag, "SOLVED_LVL" : problemForEachUser.input_level, "HASH_ID" : problemForEachUser.input_hash})
+    df = pd.DataFrame({"PROBLEM_ID" : allProblem.idx, "TITLE_NM" : allProblem.input_title, "TAGS_NM" : allProblem.input_tag, "SOLVED_LVL" : allProblem.input_level, "HASH_ID" : allProblem.input_hash})
     df.to_csv(PATH + "/static/problem_all.csv", encoding="utf8")
 
 if __name__ == "__main__":
