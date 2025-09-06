@@ -1,4 +1,6 @@
 const tag = document.getElementById("tag");
+const submit = document.getElementById("submit");
+const problems = document.getElementById("problems")
 
 window.onload = () => {
     fetch('/getTagList')
@@ -6,16 +8,44 @@ window.onload = () => {
         return response.json();
     })
     .then(data => {
-        const item = new Option();
-        item.value = "no_choice";
-        item.text = "선택 안함";
-        tag.append(item)
         data.items.forEach(element => {
-            const item = new Option();
-            console.log(element["ko"]);
-            item.value = element["en_short"];
-            item.text = element["ko"];
-            tag.append(item)
+            const item = document.createElement("option");
+            item.value = element["en"]
+            item.text = element["ko"]
+            tag.appendChild(item)
         });
     })
 };
+
+submit.addEventListener('click', () => {
+    problems.innerHTML = ""
+    console.log("chosen: ", tag.options[tag.selectedIndex].value)
+    const dataToSend = {
+        'tag': tag.options[tag.selectedIndex].value
+    };
+    fetch('/getRecommendationByTag', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataToSend)
+    })
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        const items = data.items;
+        items.forEach(element => {
+            const item = document.createElement("div");
+            item.className = "problem";
+            const no = document.createElement("p");
+            no.textContent = element["problemId"];
+            const title = document.createElement("a");
+            title.text = element["titleKo"];
+            title.href = "https://www.acmicpc.net/problem/" + element["problemId"];
+            item.appendChild(no);
+            item.appendChild(title);
+            problems.appendChild(item);
+        });
+    });
+});
