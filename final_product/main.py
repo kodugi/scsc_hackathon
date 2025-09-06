@@ -140,6 +140,7 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route('/search', methods = ['GET', 'POST'])
+@login_required
 def search():
     if(request.method == 'GET'):
         return render_template('search.html')
@@ -171,6 +172,7 @@ def crawlSolved(handle):
     return {"items": items}
 
 @app.route('/getRecommendation', methods = ['GET'])
+@login_required
 def getRecommendation():
     if(loggedIn):
         solvedProblems = crawlSolved(user.get_id())
@@ -185,6 +187,7 @@ def recommend(query):
     return [1000, 1001, 1002, 1003]
 
 @app.route('/pvp', methods = ['GET', 'POST'])
+@login_required
 def pvp():
     if(request.method == 'GET'):
         return render_template("pvp.html")
